@@ -30,13 +30,13 @@
       clientID: 'b5a47e16549a0ae9e9bd',
       clientSecret: 'dcad251aa4716fae30e1de49174dedef087e8eaf',
       repo: 'rust-docs',
-      owner: '皮特ᴾᵗ',
-      admin: ['皮特ᴾᵗ'],
+      owner: 'hyperter96',
+      admin: ['hyperter96'],
       id: md5(page.value.relativePath),
       language: 'zh-CN',
       distractionFreeMode: false,
       // 默认: https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token
-      // proxy: 'https://vercel.charles7c.top/github_access_token',
+      proxy: 'https://github.com/login/oauth/access_token',
     });
   }
 
@@ -48,7 +48,7 @@
       // 如果点赞，先判断有没有登录
       let $gc = $('#comment-container');
       $gc.on('click', '.gt-comment-like', function () {
-        if (!window.localStorage.getItem('GT_ACCESS_TOKEN')) {
+        if (!window.localStorage.getItem('RUST_TOKEN')) {
           Message.warning({
             content: '点赞前，请您先进行登录',
             closable: true
