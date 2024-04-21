@@ -29,7 +29,7 @@ showComment: false
 - 👋 Hi, I'm Peter Liao
 - 🔭 I'm currently working on backend development
 - 📫 How to reach me: [j29liao@uwaterloo.ca](mailto:j29liao@uwaterloo.ca)
-- 📖 My motto: “东隅已逝，桑榆非晚。”
+- 📖 My motto: “一直为实现自我价值而执着！”
 ---
 
 ### 后端技术栈
