@@ -1,6 +1,6 @@
 :root {
-    --c-brand: #3eaf7c;
-    --c-brand-light: #4abf8a;
+    --c-brand: #f5a142;
+    --c-brand-light: #f86724;
     --c-bg: #ffffff;
     --c-bg-light: #f3f4f5;
     --c-bg-lighter: #eeeeee;
@@ -52,8 +52,8 @@
 }
 
 html.dark {
-    --c-brand: #3aa675;
-    --c-brand-light: #349469;
+    --c-brand: #f5a142;
+    --c-brand-light: #f86724;
     --c-bg: #22272e;
     --c-bg-light: #2b313a;
     --c-bg-lighter: #262c34;

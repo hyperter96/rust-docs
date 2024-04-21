@@ -27,16 +27,16 @@
   let gitalk;
   if (type.value && type.value == 'gitalk') {
     gitalk = new Gitalk({
-      clientID: '1de126ce1fbdbe049709',
-      clientSecret: '035fe49874a43e5cefc28a99b7e40b1925319c62',
-      repo: 'charles7c.github.io',
-      owner: 'Charles7c',
-      admin: ['Charles7c'],
+      clientID: 'b5a47e16549a0ae9e9bd',
+      clientSecret: 'dcad251aa4716fae30e1de49174dedef087e8eaf',
+      repo: 'rust-docs',
+      owner: '皮特ᴾᵗ',
+      admin: ['皮特ᴾᵗ'],
       id: md5(page.value.relativePath),
       language: 'zh-CN',
       distractionFreeMode: false,
       // 默认: https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token
-      proxy: 'https://vercel.charles7c.top/github_access_token',
+      // proxy: 'https://vercel.charles7c.top/github_access_token',
     });
   }
 

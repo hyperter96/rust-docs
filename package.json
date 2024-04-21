@@ -1,7 +1,7 @@
 {
-  "name": "charles7c-repo",
-  "description": "查尔斯的个人知识库，记录 & 分享个人碎片化、结构化、体系化的技术知识内容。",
-  "author": "Charles7c",
+  "name": "rust-docs",
+  "description": "皮特ᴾᵗ的Rust知识库",
+  "author": "皮特ᴾᵗ",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
     "mermaid": "9.3.0",
     "unplugin-vue-components": "^0.25.2",
     "vite": "^5.0.3",
-    "vitepress": "1.0.0-rc.31",
+    "vitepress": "1.0.2",
     "vitepress-plugin-mermaid": "2.0.8",
     "vue": "^3.3.9"
   },
