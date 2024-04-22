@@ -36,7 +36,8 @@
     "gray-matter": "^4.0.3",
     "jquery": "^3.7.1",
     "vitepress-plugin-codeblocks-fold": "^1.2.28",
-    "vitepress-plugin-nprogress": "^0.0.4"
+    "vitepress-plugin-nprogress": "^0.0.4",
+    "xmind-embed-viewer": "^1.2.0"
   },
   "pnpm": {
     "overrides": {

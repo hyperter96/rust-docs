@@ -40,6 +40,9 @@ dependencies:
   vitepress-plugin-nprogress:
     specifier: ^0.0.4
     version: 0.0.4
+  xmind-embed-viewer:
+    specifier: ^1.2.0
+    version: 1.2.0
 
 devDependencies:
   '@arco-design/web-vue':
@@ -5054,6 +5057,10 @@ packages:
 
   /wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+    dev: false
+
+  /xmind-embed-viewer@1.2.0:
+    resolution: {integrity: sha512-dtsxbeePxhSy3g/Kyc4Oe1K3hfdCmkiyRtvONN2KZ2MqeL/QBFTvL4imCiXfAiLpincl42r87OOA3V3Shcza4A==}
     dev: false
 
   /xmldom-sre@0.1.31:

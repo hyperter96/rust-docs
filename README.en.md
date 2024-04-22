@@ -1,6 +1,6 @@
 English | [中文](./README.md)
 
-# Charles's Repositories
+# Peter's Rust Repositories
 
 <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">
     <img src="https://img.shields.io/badge/Post%20License-CC%204.0%20BY--SA-blue.svg">
@@ -13,6 +13,6 @@ English | [中文](./README.md)
 </a>
 
 
-📝 **This is the Peter's personal technology knowledge repositories website.** 
+📝 **This is the Peter's personal technology knowledge repositories website for Rust.** 
 
 🐢 [GitHub Pages](https://rust.hyperter.top)

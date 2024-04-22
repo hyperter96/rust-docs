@@ -8,6 +8,18 @@ categories:
 
 # 前言
 
+<script setup>
+  import XmindViewer from '../../.vitepress/theme/components/XmindViewer.vue'
+</script>
+<style>
+.xmind-container {
+    padding-top: 20px;
+}
+</style>
+<div class="xmind-container">
+    <XmindViewer url="https://rust.hyperter.top/xmind/rust-mindmap.xmind"/>
+</div>
+
 Rust 程序设计语言的本质实际在于 赋能（empowerment）：无论你现在编写的是何种代码，Rust 能让你在更为广泛的编程领域走得更远，写出自信。（这一点并不显而易见）
 
 举例来说，那些“系统层面”的工作涉及内存管理、数据表示和并发等底层细节。从传统角度来看，这是一个神秘的编程领域，只为浸润多年的极少数人所触及，也只有他们能避开那些臭名昭著的陷阱。即使谨慎的实践者，亦唯恐代码出现漏洞、崩溃或损坏。
@@ -22,4 +34,3 @@ Rust 破除了这些障碍：它消除了旧的陷阱，并提供了伴你一路
 
 —— Nicholas Matsakis 和 Aaron Turon
 
-## 知识地图
