@@ -9,6 +9,7 @@ tags:
  - Rust基础
  - 所有权
  - 借用
+ - 生命周期
  - 结构体
  - 枚举
 ---
@@ -113,6 +114,436 @@ fn main() {
 
 这个模式对编写 Rust 代码的方式有着深远的影响。现在它看起来很简单，不过在更复杂的场景下代码的行为可能是不可预测的，比如当有多个变量使用在堆上分配的内存时。现在让我们探索一些这样的场景。
 
+### 引用与借用
+
+**引用**（*reference*）像一个指针，因为它是一个地址，我们可以由此访问储存于该地址的属于其他变量的数据。 与指针不同，引用确保指向某个特定类型的有效值。
+
+下面是如何定义并使用一个（新的）`calculate_length`函数，它以一个对象的引用作为参数而不是获取值的所有权：
+
+```rust
+// ANCHOR: all
+fn main() {
+    // ANCHOR: here
+    let s1 = String::from("hello");
+
+    let len = calculate_length(&s1);
+    // ANCHOR_END: here
+
+    println!("The length of '{}' is {}.", s1, len);
+}
+
+fn calculate_length(s: &String) -> usize {
+    s.len()
+}
+// ANCHOR_END: all
+```
+
+首先，注意变量声明和函数返回值中的所有元组代码都消失了。其次，注意我们传递`&s1`给`calculate_length`，同时在函数定义中，我们获取`&String`而不是`String`。这些`&`符号就是**引用**，它们允许你使用值但不获取其所有权。图 3-1 展示了一张示意图。
+
+<img alt="&amp;String s pointing at String s1" src="https://rust.hyperter.top/screenshot/trpl04-05.8ade0cb0.svg" class="center" />
+
+<span class="caption">图 3-1：`&String s` 指向 `String s1` 示意图</span>
+
+:::warning 注意📢：
+与使用`&`引用相反的操作是**解引用**（*dereferencing*），它使用解引用运算符，`*`。我们将会在第八章遇到一些解引用运算符，并在第十五章详细讨论解引用。
+:::
+
+仔细看看这个函数调用：
+
+```rust
+// ANCHOR: all
+fn main() {
+    // ANCHOR: here
+    let s1 = String::from("hello");
+
+    let len = calculate_length(&s1);
+    // ANCHOR_END: here
+
+    println!("The length of '{}' is {}.", s1, len);
+}
+
+fn calculate_length(s: &String) -> usize {
+    s.len()
+}
+// ANCHOR_END: all
+```
+
+`&s1`语法让我们创建一个 指向 值`s1`的引用，但是并不拥有它。因为并不拥有这个值，所以当引用停止使用时，它所指向的值也不会被丢弃。
+
+同理，函数签名使用`&`来表明参数`s`的类型是一个引用。让我们增加一些解释性的注释：
+
+```rust
+fn main() {
+    let s1 = String::from("hello");
+
+    let len = calculate_length(&s1);
+
+    println!("The length of '{}' is {}.", s1, len);
+}
+
+// ANCHOR: here
+fn calculate_length(s: &String) -> usize { // s是String的引用
+    s.len()
+} // 这里，s 离开了作用域。但因为它并不拥有引用值的所有权，
+  // 所以什么也不会发生
+// ANCHOR_END: here
+```
+
+变量`s`有效的作用域与函数参数的作用域一样，不过当`s`停止使用时并不丢弃引用指向的数据，因为`s`并没有所有权。当函数使用引用而不是实际值作为参数，无需返回值来交还所有权，因为就不曾拥有所有权。
+
+我们将创建一个引用的行为称为**借用**（*borrowing*）。正如现实生活中，如果一个人拥有某样东西，你可以从他那里借来。当你使用完毕，必须还回去。我们并不拥有它。
+
+如果我们尝试修改借用的变量呢？尝试以下的代码。
+
+```rust
+fn main() {
+    let s = String::from("hello");
+
+    change(&s);
+}
+
+fn change(some_string: &String) {
+    some_string.push_str(", world");
+}
+```
+
+这里是错误：
+
+```bash
+$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0596]: cannot borrow `*some_string` as mutable, as it is behind a `&` reference
+ --> src/main.rs:8:5
+  |
+7 | fn change(some_string: &String) {
+  |                        ------- help: consider changing this to be a mutable reference: `&mut String`
+8 |     some_string.push_str(", world");
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `some_string` is a `&` reference, so the data it refers to cannot be borrowed as mutable
+
+For more information about this error, try `rustc --explain E0596`.
+error: could not compile `ownership` due to previous error
+```
+
+正如变量默认是不可变的，引用也一样。（默认）不允许修改引用的值。
+
+#### 不可变借用
+
+符号`&`表示对资源的借用。
+
+```rust
+let y = &x          // y借用x的资源访问权。y引用了资源。
+println!("{:?}",y)  // x的所有权没有转移。但已经可以通过y访问x的资源。
+```
+
+`y`被称为资源的引用。 当引用变量离开作用域，即释放对资源的引用。
+
+Rust 默认`&`是一种不可变的借用。即借用所有权的变量不可以修改资源的值。
+
+```rust
+fn main() {
+    let x: Vec<i32> = vec!(1, 2, 3);
+    let y = &x;    // y借用x对资源的所有权。vec的所有权仍然是x的。
+    println!("x={:?}, y={:?}", x, y);
+}
+```
+
+`&x`即对`x`的Borrowing。这不会发生所有权实际的转移。所以`println`没有编译异常。
+
+##### 不可变引用类型
+
+借用到资源引用的变量，是一种特殊的类型。不再是资源原始的类型了。
+
+```rust
+let y = &x  // y借用x的资源访问权。y只是引用了资源。
+```
+
+若`x`的类型为`T`，则`&x`的类型为`&T`，`y`的类型为`&T`。这是一个**引用类型**。
+
+需要有引用类型这个概念，这可以帮我们更好的理解Rust。
+
+对于代码：
+
+```rust
+let a = 100;
+let y = &a;
+```
+
+`a`的类型为`i32`，`y`的类型为`&i32`。`y`不可变，即`y`不能再与其他引用绑定。
+
+对于代码：
+
+```rust
+let b = 200;
+let mut y = &b;
+```
+
+`b`的类型为`i32`，`y`的类型为`&i32`。`y`可变，即`y`可以与其他引用绑定。
+
+例：`y`可以与不同引用类型绑定。
+
+```rust
+fn main() {
+    let a = 100;
+    let b = 200;
+    let mut y = &a;
+    y = &b;
+    println!("{:?},{:?}", a,y);
+}
+```
+
+> 对于`let mut y = &a;`该语句会引发编译告警，但编译可通过。编译器认为这句语句没必要。直接写成`let mut y = &b;`即可。可以看到Rust编译器非常智能。
+>
+> 此处只是为了演示，真实场景不太可能写出这样的语句。
+
+#### 可变借用
+
+Rust也提供了一种可变资源的借用。
+
+- 使用`&mut`符号表示对可变资源的引用。
+- 若需要访问可变资源的引用，必须在变量前使用`*`来访问资源。
+
+例：使用可变引用。
+
+```rust
+fn main() {
+    let mut x: i32 = 100;
+
+    // 可变借用
+    let y: &mut i32 = &mut x;
+
+    // y的类型是&mut i32，无法使用'+='，*y指向实际资源。使用'+='修改资源值。
+    *y += 100;
+
+    println!("{}", *y);    // 打印输出 200 。
+    // 或者，可以写成。 println!("{}", y);
+}
+```
+
+`&mut i32`可以看作是一种可变`i32`的引用类型。
+
+所以`let y: &mut i32 = &mut x`，可简写为：`let y = &mut x`
+
+这段代码最后并没有直接访问`x`，而是打印输出的`y`。为什么这段代码不直接写`println!("{:?}", x);`这是有原因的。
+
+若上面的例子写成：
+
+```rust
+fn main() {
+    let mut x: i32 = 100;
+    let y: &mut i32 = &mut x;
+    *y += 100;
+    println!("{}", x);
+}
+```
+
+编译报错。**为什么？** 要解决这个问题，需要理解如下规则。
+
+#### 借用规则
+
+1. 同一个作用域中，一个资源只有一个可变借用（`&mut T`），但拥有可变借用（`&mut T`）后就不能有不可变借用（`&T`）。
+2. 同一个作用域中，一个资源可以有多个不可变借用（`&T`），但拥有不可变借用（`&T`）后就不能有可变借用（`&mut T`）。
+3. 借用在离开作用域后释放。
+4. 可变借用（`&mut T`）释放前不可访问原变量。
+5. 若变量已经被借用，则变量的所有权不可再被move。
+
+对于规则1、2：
+
+简单来说，可变借用与不可变借用在同一作用域是互斥的，且可变结合两两互斥。
+
+> 借用规则非常像“读写锁”。即同一时刻，同一资源，只能拥有一个“写锁”，或只能拥有多个“读锁”，不允许“写锁”和“读锁”在同一时刻同时出现。
+>
+> - 可变引用（`&mut T`）相当于写锁。
+> - 不可变引用(`&T`)相当于读锁。
+
+这是数据读写过程中保障一致性的典型做法。Rust在编译中完成借用的检查，保证了程序在运行时不会出错。
+
+对于规则3，4：
+
+> 简单来说就是：归还借用，借走不碰。
+>
+> 借来的东西，总是要还的。一定要注意应该在何处何时正确的“归回”引用。
+>
+> 东西一旦借给别人使用，自己触碰不到了。所以也无法访问。
+
+对于规则5：
+
+> 别人正在用的东西，我自己也不该去动。
+
+所以，对于上面代码若需要修改正确，则需要`y`释放掉可变引用。简单的做法就是，让`y`提前在一个作用域中释放掉。
+
+```rust
+fn main() {
+    let mut x: i32 = 100;
+    {
+        let y: &mut i32 = &mut x;
+        *y += 100;           // 修改 y 指定的资源。
+    }                        // 释放可变引用。
+    println!("{}", x);       // 该作用域汇总，x不再有其他可变引用。所以可以访问。
+}
+```
+
+### 生命周期
+
+通常我们所说的生命周期应该是存在一个循环过程的。另外，**在 Rust 中，只有引用类型才需要标注 lifetime。 lifetime 是用来保证引用类型在使用时是有效的，并且在使用结束后释放所占用的内存的一种机制。** 所以，我们可以将其翻译为引用的生存期，引用的有效期，引用的使用期等等。
+
+我们先看一个小例子：
+
+```rust
+fn main() {
+    let a;
+    {
+        let b = 1;
+        a = &b;
+    }
+    println!("{}", *a);
+}
+```
+
+这段代码是编译不通过的，来看下编译器给出的错误。
+
+```text
+error[E0597]: `b` does not live long enough
+--> src\main.rs:6:13
+  |
+6 |        a = &b;
+  |            ^^ borrowed value does not live long enough
+7 |    }
+  |    - `b` dropped value while still borrowed
+8 |    println!("{}", *a);
+  |                   borrow later still used here
+```
+
+字面意思就是`b 活的不够长`，很通俗易懂哈哈。简单分析下：变量`a`是一个`&i32`引用类型，我们在内部代码块中初始化`a`，但是当内部代码块执行结束后，变量`b`离开作用域被释放了，但是`a`没有被释放，这时`a`就会变成`悬垂指针`，当然这在 Rust 中是绝对不允许的。
+
+理论上来讲，其实所有的变量都存在生存期，**变量的生命期一定是包含引用的生存期。** 先来看下面这张图片，红框所示的区域是变量a的生命期。蓝框所示的是b的作用域(生命期)。很显然b的作用域没有包含`a`，变量的生命期没有包含引用的生命期，这种做法是禁止的。
+
+![](https://rust.hyperter.top/screenshot/lifecycle-1.png)
+
+很显然`b`的作用域包含`a`，变量的生命期包含了引用的生命期。这段代码是可以正常编译的。
+
+#### 生命期的使用
+
+##### 标注生命期
+
+只有引用类型才需要标注lifetime。因此，以`&i32`为例，标注生命期后变为`&'a i32`，在`&`后添加`'a`，通常叫做生命期`a`。`a`可以被更换，其命名规则参考变量的命名规则。
+
+- `&'a i32`标注生命期`a`的共享引用
+- `&'a mut i32`标注生命期`a`的可变引用
+
+##### 函数/方法签名中的生命期标注
+
+编译器通常会推断生命期，当然我们也可以标注生命期。通常我们写函数/方法时是下面的写法。
+
+```rust
+fn test(name: &str) -> &str {
+    println!("{}", name);
+    return name;
+}
+```
+
+其实，这里是存在生命期标注的，如果编译器可以自动推断生命期时，则无需标注。上面的函数添加生命期标注后如下所示：
+
+```rust
+fn test_life<'_a>(name: &'_a str) -> &'_a str {
+    println!("{}", name);
+    return name;
+}
+```
+
+在函数名后面，添加`<'a>`，如同泛型，在标注前先声明。然后再对每个参数或者返回值标注。
+
+##### 为什么存在生命期？
+
+**生命期仅用于编译器的检查。并不会更改原有生命期的长短。** 举个简单的例子，下面的代码是传入两个字符串，返回最长的那个字符串。
+
+```rust
+fn main() {
+    let x = String::from("xxx");
+    let y = "yyyy";
+​
+    let z = longest(x, y);
+​
+    println!("{}", z);
+}
+​
+fn longest(x: &str, y: &str) -> &str {
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+```
+如果我们直接编译，会提示错误。
+
+```text
+error[E0106]: missing lifetime specifier
+  --> src\main.rs:31:33
+   |
+31 | fn longest(x: &str, y: &str) -> &str {
+   |               ----     ----     ^ expected named lifetime parameter
+   |
+   = help: this function's return type contains a borrowed value, but the signature does not say whether it is borrowed from `x` or `y`
+help: consider introducing a named lifetime parameter
+   |
+31 | fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+   |           ++++     ++          ++          ++
+​
+For more information about this error, try `rustc --explain E0106`.
+error: could not compile `lifetime` due to previous error
+```
+
+错误提示告诉我们，缺少生命期标识符。在当编译时期，rust 并不知道我们返回的是`x`还是`y`，因此不能确定返回的字符串的生命期。这个函数主体中，`if`块返回的是`x`的引用，而`else`块返回的是`y`的引用。所以我们需要标注生命期，来告诉编译器。
+
+```rust
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+```
+
+标注传入参数的生命期都是`a`，返回值的生命期也是`a`，所以无论返回`x`还是`y`，都是生命期`a`的`&str`。因此：**生命期仅用于编译器的检查。**
+
+#### 引用作为函数/方法返回值
+
+我们再看下面一个例子，编译会发现报错：
+
+```rust
+/// 拼接两个字符串
+fn concat_str<'a>(x: &'a str, y: &'a str) -> &'a str {
+    let s = format!("{}{}",x, y);
+    return s.as_str();
+}
+```
+
+下面是错误，不能返回一个局部变量：
+
+```text
+error[E0515]: cannot return reference to local variable `s`
+  --> src\main.rs:36:12
+   |
+36 |     return s.as_str();
+   |            ^^^^^^^^^^ returns a reference to data owned by the current function
+​
+For more information about this error, try `rustc --explain E0515`.
+error: could not compile `lifetime` due to previous error
+```
+
+我们思考，假设可以通过编译，会发生什么？当函数结束后，`s`被释放，返回的引用会变成**悬垂引用**，这种做法是在 rust 中禁止的。因此我们可以得出一个结论，**当从一个函数/方法返回一个引用时，返回类型的生命期参数需要与其中一个参数的生命期参数相匹配。** 当然也存在例外，继续往下看。
+
+#### 静态生命期
+
+在 Rust 中，存在一种静态生命期`'static`。它表示数据在程序的整个运行期间都有效，它常用于储存全局静态数据和字符串常量。像一些字符串字面量，字节字符串字面量等等这些类似的生命期默认是`'static`。在函数里，可以直接返回`'static`的生命期。
+
+```rust
+fn get_any_str() -> &'static str {
+    return "static";
+}
+```
+
 ## 堆（Heap）和栈（Stack）
 
 ### 堆（Heap）
@@ -176,21 +607,21 @@ fn main() {
 
 <img alt="String in memory" src="https://rust.hyperter.top/screenshot/trpl04-01.6a1fa64a.svg" class="center" style="width: 50%;" />
 
-<span class="caption">图 3-1：将值 `"hello"` 绑定给 `s1` 的 `String` 在内存中的表现形式</span>
+<span class="caption">图 3-2：将值 `"hello"` 绑定给 `s1` 的 `String` 在内存中的表现形式</span>
 
 长度表示`String`的内容当前使用了多少字节的内存。容量是`String`从分配器总共获取了多少字节的内存。长度与容量的区别是很重要的，不过在当前上下文中并不重要，所以现在可以忽略容量。
 
-当我们将`s1`赋值给`s2`，`String`的数据被复制了，这意味着我们从栈上拷贝了它的指针、长度和容量。我们并没有复制指针指向的堆上数据。换句话说，内存中数据的表现如下图3-2 所示。
+当我们将`s1`赋值给`s2`，`String`的数据被复制了，这意味着我们从栈上拷贝了它的指针、长度和容量。我们并没有复制指针指向的堆上数据。换句话说，内存中数据的表现如下图3-3 所示。
 
 <img alt="s1 and s2 pointing to the same value" src="https://rust.hyperter.top/screenshot/trpl04-02.bb682764.svg" class="center" style="width: 50%;" />
 
-<span class="caption">图 3-2：变量 `s2` 的内存表现，它有一份 `s1` 指针、长度和容量的拷贝</span>
+<span class="caption">图 3-3：变量 `s2` 的内存表现，它有一份 `s1` 指针、长度和容量的拷贝</span>
 
-这个表现形式看起来 并不像 图 3-3 中的那样，如果 Rust 也拷贝了堆上的数据，那么内存看起来就是这样的。如果 Rust 这么做了，那么操作`s2 = s1`在堆上数据比较大的时候会对运行时性能造成非常大的影响。
+这个表现形式看起来 并不像 图 3-4 中的那样，如果 Rust 也拷贝了堆上的数据，那么内存看起来就是这样的。如果 Rust 这么做了，那么操作`s2 = s1`在堆上数据比较大的时候会对运行时性能造成非常大的影响。
 
 <img alt="s1 and s2 to two places" src="https://rust.hyperter.top/screenshot/trpl04-03.c8ee5708.svg" class="center" style="width: 50%;" />
 
-<span class="caption">图 3-3：另一个 `s2 = s1` 时可能的内存表现，如果 Rust 同时也拷贝了堆上的数据的话</span>
+<span class="caption">图 3-4：另一个 `s2 = s1` 时可能的内存表现，如果 Rust 同时也拷贝了堆上的数据的话</span>
 
 之前我们提到过当变量离开作用域后，Rust 自动调用`drop`函数并清理变量的堆内存。不过图 3-2 展示了两个数据指针指向了同一位置。这就有了一个问题：当`s2`和`s1`离开作用域，他们都会尝试释放相同的内存。这是一个叫做**二次释放**（double free）的错误，也是之前提到过的内存安全性 bug 之一。两次释放（相同）内存会导致内存污染，它可能会导致潜在的安全漏洞。
 
@@ -213,11 +644,11 @@ fn main() {
 Invalid code snippet option
 ```
 
-如果你在其他语言中听说过术语**浅拷贝**（shallow copy）和**深拷贝**（deep copy），那么拷贝指针、长度和容量而不拷贝数据可能听起来像浅拷贝。不过因为 Rust 同时使第一个变量无效了，这个操作被称为**移动**（move），而不是浅拷贝。上面的例子可以解读为`s1`被 移动 到了`s2`中。那么具体发生了什么，如图 3-4 所示。
+如果你在其他语言中听说过术语**浅拷贝**（shallow copy）和**深拷贝**（deep copy），那么拷贝指针、长度和容量而不拷贝数据可能听起来像浅拷贝。不过因为 Rust 同时使第一个变量无效了，这个操作被称为**移动**（move），而不是浅拷贝。上面的例子可以解读为`s1`被 移动 到了`s2`中。那么具体发生了什么，如图 3-5 所示。
 
 <img alt="s1 moved to s2" src="https://rust.hyperter.top/screenshot/trpl04-04.040f910e.svg" class="center" style="width: 50%;" />
 
-<span class="caption">图 3-4：`s1` 无效之后的内存表现</span>
+<span class="caption">图 3-5：`s1` 无效之后的内存表现</span>
 
 这样就解决了我们的问题！因为只有`s2`是有效的，当其离开作用域，它就释放自己的内存，完毕。
 
