@@ -382,6 +382,90 @@ fn main() {
 }
 ```
 
+#### 悬垂引用
+
+在具有指针的语言中，很容易通过释放内存时保留指向它的指针而错误地生成一个**悬垂指针**（*dangling pointer*），所谓悬垂指针是其指向的内存可能已经被分配给其它持有者。相比之下，在 Rust 中编译器确保引用永远也不会变成悬垂状态：当你拥有一些数据的引用，编译器确保数据不会在其引用之前离开作用域。
+
+让我们尝试创建一个悬垂引用，Rust 会通过一个编译时错误来避免：
+
+```rust
+fn main() {
+    let reference_to_nothing = dangle();
+}
+
+fn dangle() -> &String {
+    let s = String::from("hello");
+
+    &s
+}
+```
+
+这里是错误：
+
+```bash
+$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0106]: missing lifetime specifier
+ --> src/main.rs:5:16
+  |
+5 | fn dangle() -> &String {
+  |                ^ expected named lifetime parameter
+  |
+  = help: this function's return type contains a borrowed value, but there is no value for it to be borrowed from
+help: consider using the `'static` lifetime
+  |
+5 | fn dangle() -> &'static String {
+  |                ~~~~~~~~
+
+For more information about this error, try `rustc --explain E0106`.
+error: could not compile `ownership` due to previous error
+```
+
+错误信息引用了一个我们还未介绍的功能：生命周期（lifetimes）。下一节会详细介绍生命周期。不过，如果你不理会生命周期部分，错误信息中确实包含了为什么这段代码有问题的关键信息：
+
+```text
+this function's return type contains a borrowed value, but there is no value
+for it to be borrowed from
+```
+
+让我们仔细看看我们的`dangle`代码的每一步到底发生了什么：
+
+```rust
+fn main() {
+    let reference_to_nothing = dangle();
+}
+
+// ANCHOR: here
+fn dangle() -> &String { // dangle 返回一个字符串的引用
+
+    let s = String::from("hello"); // s 是一个新字符串
+
+    &s // 返回字符串 s 的引用
+} // 这里 s 离开作用域并被丢弃。其内存被释放。
+  // 危险！
+// ANCHOR_END: here
+```
+
+因为`s`是在`dangle`函数内创建的，当`dangle`的代码执行完毕后，`s`将被释放。不过我们尝试返回它的引用。这意味着这个引用会指向一个无效的`String`，这可不对！Rust 不会允许我们这么做。
+
+这里的解决方法是直接返回`String`：
+
+```rust
+fn main() {
+    let string = no_dangle();
+}
+
+// ANCHOR: here
+fn no_dangle() -> String {
+    let s = String::from("hello");
+
+    s
+}
+// ANCHOR_END: here
+```
+
+这样就没有任何错误了。所有权被移动出去，所以没有值被释放。
+
 ### 生命周期
 
 通常我们所说的生命周期应该是存在一个循环过程的。另外，**在 Rust 中，只有引用类型才需要标注 lifetime。 lifetime 是用来保证引用类型在使用时是有效的，并且在使用结束后释放所占用的内存的一种机制。** 所以，我们可以将其翻译为引用的生存期，引用的有效期，引用的使用期等等。
@@ -543,6 +627,205 @@ fn get_any_str() -> &'static str {
     return "static";
 }
 ```
+
+## 枚举和匹配模式
+
+### 枚举
+
+- 枚举(*enums*)是一种用户自定义的数据类型，用于表示具有一组离散可能值的变量：
+
+    - 每种可能值都称为“Variant”（变体）
+    - 枚举名::变体名
+
+- 枚举的好处：
+
+    - 可以使你的代码更严谨、更易读
+    - More Robust Programs
+
+例子：
+
+```rust
+enum Color {
+    Red,
+    Yellow,
+    Blue,
+    Black,
+}
+
+fn print_color(my_color: Color) {
+    match my_color {
+        Color::Red => println!("Red"),
+        Color::Yellow => println!("Yellow"),
+        Color::Blue => println!("Blue"),
+        Color::Black => println!("Black"),
+    }
+}
+
+enum BuildingLocation {
+    Number(i32),
+    Name(String), // 不用&str
+    Unknown,
+}
+
+impl BuildingLocation {
+    fn print_location<'0>(&'0 self) {
+        match self {
+            // BuildingLocation::Number(44)
+            BuildingLocation::Number(c: &i32) => println!("building number: {}", c),
+            // BuildingLocation::Name("ok".to_string())
+            BuildingLocation::Name(s: &String) => println!("building string: {}", s),
+
+            BuildingLocation::Unknown => println!("building unknown"),
+        }
+    }
+}
+
+fn main() {
+    let a: Color = Color::Red;
+    print_color(my_color: a);
+
+    let house: BuildingLocation = BuildingLocation::Name("fdfd".to_string());
+    house.print_location(); // building string: fdfd
+}
+```
+
+#### 常用的枚举类型：`Option`和`Result`
+
+```rust
+pub enum option<T> {
+    None,
+    Some(T),
+}
+
+pub enum Result<T, E> {
+    Ok(T),
+    Error(E),
+}
+```
+
+#### 匹配模式
+
+1. `match`关键字实现
+2. 必须覆盖所有的变体
+3. 可以用`_`、`..`、三元（`if`）等来进行匹配
+
+```rust
+match number {
+    0 => println!("Zero"),
+    1 | 2 => println!("One or Two"),
+    3..=9 => println!("From three to nine"),
+    n if n % 2 == 0 => println!("Even number"),
+    _ => println!("Other"),
+}
+```
+
+## Ownership和结构体
+
+### 初识结构体、方法、关联函数、关联变量
+
+结构体是一种用户定义的数据类型，用于创建自定义的数据结构，
+
+```rust
+struct Point {
+    x: i32,
+    y: i32,
+}
+```
+
+每条数据的 (`x`和`y`) 称为属性（`field`），通过点（`.`）来访问结构体中的属性。
+
+#### 结构体中的方法
+
+这里的方法指，通过实例调用（`&self`、`&mut self`、`self`）
+
+```rust
+impl Point {
+    fn distance(&self, other: &Point) -> f64 {
+        let dx = (self.x - other.x) as f64;
+        let dy = (self.y - other.y) as f64;
+        (dx * dx + dy * dy).sqrt()
+    }
+}
+```
+
+#### 结构体中的关联函数
+
+关联函数是与类型相关联的函数，调用时为结构体名::函数名，
+
+```rust
+impl Point {
+    fn new(x: u32, y: u32) -> Self {
+        Point {x, y}
+    }
+}
+```
+
+#### 结构体中的关联变量
+
+这里的关联变量是，和结构体相关联的变量，也可以在特质或者枚举中，
+
+```rust
+impl Point {
+    const PI: f64 = 3.14;
+}
+```
+
+调用时用`Point::PI`。
+
+#### 练习
+
+我们定义一个结构体，
+```rust
+struct Drink {
+    flavor: Flavor,
+    price: f64,
+}
+```
+
+然后定义关联变量、方法和关联函数，
+
+```rust
+impl Drink {
+    // 关联变量
+    const MAX_PRICE: f64 = 10.0;
+    // 方法
+    fn buy<'0>(&'0 self) {
+        if self.price > 10.0 {
+            println!("I am poor");
+            return;
+        }
+        println!("buy it");
+    }
+    // 关联函数
+    fn new(price: f64) -> self {
+        Drink{
+            flavor: Flavor::Fruity,
+            price: price,
+        }
+    }
+}
+```
+
+打印多种口味的饮料的函数，
+
+```rust
+fn print_drink(drink: Drink) {
+    match drink.flavor {
+        Flavor::Fruity => println!("fruity"),
+        Flavor::Sweet => println!("sweet"),
+        Flavor::Spicy => println!("spicy"),
+    }
+    println!("{}", drink.price);
+}
+```
+
+### 值传递语义（Value Passing Semantics）
+
+每当将值从一个位置传递到另一个位置时，`borrow checker`都会重新评估所有权。
+
+1. `Immutable Borrow`使用不可变的借用，值的所有权仍归发送方所有，接收方直接接收对该值的引用，而不是该值的副本。但是，他们不能使用该引用来修改它指向的值，编译器不允许这样做。释放资源的责任仍由发送方承担。仅当发送人本身超出范围时，才会删除该值。
+2. `Mutable Borrow`使用可变的借用所有权和删除值的责任也由发送者承担。但是接收方能够通过他们接收的引用来修改该值。
+3. `Move`这是所有权从一个地点转移到另一个地点。`borrow checker`关于释放该值的决定将由该值的接收者（而不是发送者）通知。由于所有权已从发送方转移到接收方，因此发送方在将引用移动到另一个上下文后不能再使用该引用，发送方在移动后对`value`的任何使用都会导致错误。
 
 ## 堆（Heap）和栈（Stack）
 
