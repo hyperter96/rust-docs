@@ -772,9 +772,9 @@ impl Point {
 
 调用时用`Point::PI`。
 
-#### 练习
+#### 例子
 
-我们定义一个结构体，
+例子一：我们定义一个结构体，
 ```rust
 struct Drink {
     flavor: Flavor,
@@ -797,7 +797,7 @@ impl Drink {
         println!("buy it");
     }
     // 关联函数
-    fn new(price: f64) -> self {
+    fn new(price: f64) -> Self {
         Drink{
             flavor: Flavor::Fruity,
             price: price,
@@ -816,6 +816,55 @@ fn print_drink(drink: Drink) {
         Flavor::Spicy => println!("spicy"),
     }
     println!("{}", drink.price);
+}
+```
+
+例子二：我们定义一个`Counter`结构体，
+
+```rust
+struct Counter {
+    number: i32,
+}
+```
+
+定义关联函数`new`、`combine`和方法`get_number`、`add`：
+
+```rust
+impl Counter {
+    fn new(number: i32) -> Self {
+        Self {number}
+    }
+
+    fn get_number(&self) -> i32 {
+        self.number
+    }
+
+    fn add(&mut self, increment: i32) {
+        self.number += increment;
+    }
+
+    fn combine(c1: Self, c2: Self) -> Self {
+        Self {
+            number: c1.number + c2.number
+        }
+    }
+}
+```
+
+然后`main`函数：
+
+```rust
+fn main() {
+    let mut c1 = Counter::new(11);
+    println!("c1 number {}", c1.get_number()); // c1 number 11
+    c1.add(2);
+    println!("c1 number {}", c1.get_number()); // c1 number 13
+
+    let c1 = Counter::new(15);
+    let c2 = Counter::new(18);
+    let c3 = Counter::combine(c1, c2);
+    println!("c3 number {}", c3.get_number()); // c3 number 33
+
 }
 ```
 
@@ -856,6 +905,26 @@ fn print_drink(drink: Drink) {
 
 在栈上分配内存比在堆上分配内存要快，因为入栈时操作系统无需进行函数调用（或更慢的系统调用）来分配新的空间，只需要将新数据放入栈顶即可。相比之下，在堆上分配内存则需要更多的工作，这是因为操作系统必须首先找到一块足够存放数据的内存空间，接着做一些记录为下一次分配做准备，如果当前进程分配的内存页不足时，还需要进行系统调用来申请更多内存。 因此，处理器在栈上分配数据会比在堆上分配数据更加高效。
 
+### `Box`
+
+`Box`是一个智能指针，它提供对堆分配内存的所有权。它允许你将数据存储在堆上而不是栈上，并且在复制或移动时保持对数据的唯一所有权。使用`Box`可以避免一些内存管理问题，如悬垂指针和重复释放。
+
+1. 所有权转移
+2. 释放内存
+3. 解引用
+4. 构建递归数据结构
+
+```rust
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn main() {
+    let box_point = Box::new(Point{x: 10, y: 20});
+    println!("x:{}, y:{}", box_point.x, box_point.y); // x:10, y:20
+}
+```
 ## Copy与Move
 
 ### 变量与数据交互方式（一）：移动
