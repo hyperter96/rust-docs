@@ -9,6 +9,8 @@ export const sidebar: DefaultTheme.Config['sidebar'] = {
   // '/categories/fragments/': getItemsByDate("categories/fragments"),
   // '/categories/solutions/': getItemsByDate("categories/solutions"),
   // '/categories/tools/': getItemsByDate("categories/tools"),
+  '/projects/rust/': getItems("projects/rust"),
+
 }
 
 /**

@@ -11,6 +11,13 @@ export const nav: DefaultTheme.Config['nav'] = [
     activeMatch: '/categories/'
   },
   {
+    text: '项目',
+    items: [
+      { text: 'Rust实现Lua解释器', link: '/projects/rust/01-Rust实现Lua解释器/编译原理以及helloWorld实现', activeMatch: '/projects/rust/'},
+    ],
+    activeMatch: '/projects/'
+  },
+  {
     text: '标签',
     link: '/tags',
     activeMatch: '/tags'
