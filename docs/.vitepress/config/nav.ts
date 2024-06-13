@@ -5,6 +5,7 @@ export const nav: DefaultTheme.Config['nav'] = [
     text: '分类',
     items: [
       { text: 'Rust基础', link: '/categories/rust/index', activeMatch: '/categories/rust/' },
+      { text: 'Web 3.0', link: '/categories/web3/index', activeMatch: '/categories/web3/'},
       // { text: '"杂碎"逆袭史', link: '/categories/fragments/index', activeMatch: '/categories/fragments/' },
       // { text: '方案春秋志', link: '/categories/solutions/index', activeMatch: '/categories/solutions/' }
     ],
