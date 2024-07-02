@@ -4,6 +4,7 @@ author: Sunface
 date: 2024/05/29 16:05
 categories:
  - Rust语法进阶
+ - Rust
 tags:
  - Rust
  - Rust基础

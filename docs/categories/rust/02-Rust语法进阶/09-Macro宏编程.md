@@ -4,6 +4,7 @@ author: 皮特ᴾᵗ
 date: 2024/06/03 19:19
 categories:
  - Rust语法进阶
+ - Rust
 tags:
  - Rust
  - Rust基础

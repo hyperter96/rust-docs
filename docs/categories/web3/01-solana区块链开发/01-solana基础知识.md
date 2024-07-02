@@ -4,6 +4,7 @@ author: 皮特ᴾᵗ
 date: 2024/06/03 12:21
 categories:
  - solana区块链开发
+ - Web 3.0
 tags:
  - Rust
  - Web 3.0
